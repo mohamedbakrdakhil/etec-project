@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew --version)",
+      "Bash(brew install:*)",
+      "Bash(brew services:*)",
+      "Bash(mysql -u root -e \"SELECT VERSION\\(\\); SHOW DATABASES;\")",
+      "Bash(mysql -u root -e \"SELECT VERSION\\(\\);\")",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
