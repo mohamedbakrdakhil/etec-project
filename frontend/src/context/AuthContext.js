@@ -13,7 +13,20 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('etec_user');
     const token = localStorage.getItem('etec_token');
     if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
+      // Vérifier si le token est expiré
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const isExpired = payload.exp * 1000 < Date.now();
+        if (isExpired) {
+          localStorage.removeItem('etec_token');
+          localStorage.removeItem('etec_user');
+        } else {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch {
+        localStorage.removeItem('etec_token');
+        localStorage.removeItem('etec_user');
+      }
     }
     setLoading(false);
   }, []);
