@@ -4,7 +4,8 @@ const db = require('../config/db');
 // Lister les utilisateurs (avec filtres)
 exports.getUsers = async (req, res) => {
   try {
-    const { role, search, page = 1, limit = 20 } = req.query;
+    const { role, search, page = 1 } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100); // max 100 per page
     const offset = (page - 1) * limit;
     
     let query = 'SELECT id, nom, prenom, email, telephone, cin, role, is_active, created_at FROM users WHERE 1=1';
@@ -85,7 +86,11 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: 'Cet email est déjà utilisé.' });
     }
 
-    const hash = await bcrypt.hash(password || 'etec2024', 10);
+    const finalPassword = password || 'etec2024';
+    if (finalPassword.length < 8) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 8 caractères.' });
+    }
+    const hash = await bcrypt.hash(finalPassword, 10);
 
     const [result] = await db.query(
       'INSERT INTO users (nom, prenom, email, password, telephone, cin, adresse, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',

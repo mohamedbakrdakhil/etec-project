@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
 
@@ -11,8 +12,18 @@ const academicCtrl = require('../controllers/academicController');
 const planningCtrl = require('../controllers/planningController');
 const dashboardCtrl = require('../controllers/dashboardController');
 
+// Strict rate limiter for login (brute force protection)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // max 10 attempts per 15 min per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.' },
+  skipSuccessfulRequests: true, // don't count successful logins
+});
+
 // ==================== AUTH ====================
-router.post('/auth/login', authCtrl.login);
+router.post('/auth/login', loginLimiter, authCtrl.login);
 router.get('/auth/profile', auth, authCtrl.getProfile);
 router.put('/auth/password', auth, authCtrl.changePassword);
 
