@@ -66,8 +66,13 @@ exports.getProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ message: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' });
+    }
+
     const [users] = await db.query('SELECT password FROM users WHERE id = ?', [req.user.id]);
-    
+
     const isMatch = await bcrypt.compare(oldPassword, users[0].password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Ancien mot de passe incorrect.' });
