@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
 const Layout = ({ pageTitle, pageSubtitle }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.toggle('sidebar-open', sidebarOpen);
+    return () => document.body.classList.remove('sidebar-open');
+  }, [sidebarOpen]);
 
   return (
     <div className="app-layout">

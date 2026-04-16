@@ -77,6 +77,18 @@ input, select, textarea { font-family: inherit; }
   }
 }
 
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px;
+    padding-top: calc(var(--header-height) + 12px);
+  }
+}
+
+/* Scroll lock when sidebar open on mobile */
+body.sidebar-open {
+  overflow: hidden;
+}
+
 /* ==================== SIDEBAR ==================== */
 .sidebar {
   width: var(--sidebar-width);
@@ -323,12 +335,27 @@ input, select, textarea { font-family: inherit; }
   display: none;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
   color: var(--text);
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: var(--transition);
 }
 
+.menu-toggle:hover { background: var(--bg); }
+
 @media (max-width: 768px) {
-  .menu-toggle { display: block; }
+  .menu-toggle { display: flex; }
+  .header-title p { display: none; }
+}
+
+@media (max-width: 480px) {
+  .header { padding: 0 12px; }
+  .header-title h1 { font-size: 15px; }
 }
 
 /* ==================== CARDS ==================== */
@@ -365,9 +392,13 @@ input, select, textarea { font-family: inherit; }
 /* Stats Cards */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 18px;
   margin-bottom: 28px;
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
 }
 
 .stat-card {
@@ -683,6 +714,20 @@ select.form-control {
   from { transform: translateY(30px) scale(0.96); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
+@keyframes slideUpMobile {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 540px) {
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation: slideUpMobile 0.3s ease;
+  }
+}
 
 /* ==================== BADGES ==================== */
 .badge {
@@ -713,6 +758,12 @@ select.form-control {
   flex: 1;
   min-width: 200px;
   position: relative;
+}
+
+@media (max-width: 480px) {
+  .search-input { min-width: 100%; }
+  .search-bar select { width: 100%; }
+  .page-header h2 { font-size: 18px; }
 }
 
 .search-input input {

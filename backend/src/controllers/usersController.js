@@ -89,7 +89,7 @@ exports.createUser = async (req, res) => {
 
     const [result] = await db.query(
       'INSERT INTO users (nom, prenom, email, password, telephone, cin, adresse, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [nom, prenom, email, hash, telephone, cin, adresse, role]
+      [nom, prenom, email, hash, telephone || null, cin || null, adresse || null, role]
     );
 
     // Log
