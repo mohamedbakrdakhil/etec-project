@@ -44,7 +44,7 @@ const Login = () => {
       <div style={styles.bgGrid} />
 
       {/* Left Panel */}
-      <div style={{...styles.leftPanel, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(-40px)', transition: 'all 0.8s cubic-bezier(0.4,0,0.2,1)'}}>
+      <div className="login-left" style={{...styles.leftPanel, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(-40px)', transition: 'all 0.8s cubic-bezier(0.4,0,0.2,1)'}}>
 
         {/* Logo big */}
         <div style={styles.leftLogo}>
@@ -81,11 +81,11 @@ const Login = () => {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div style={{...styles.rightPanel, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(40px)', transition: 'all 0.8s cubic-bezier(0.4,0,0.2,1) 0.2s'}}>
+      <div className="login-right" style={{...styles.rightPanel, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(40px)', transition: 'all 0.8s cubic-bezier(0.4,0,0.2,1) 0.2s'}}>
 
         <div style={styles.formCard}>
           {/* Mobile logo */}
-          <div style={styles.mobileHeader}>
+          <div className="mobile-header" style={styles.mobileHeader}>
             <img src="/logo.png" alt="ETEC" style={styles.mobileLogoImg} />
             <div>
               <div style={styles.mobileTitle}>ETEC</div>
@@ -217,8 +217,15 @@ const Login = () => {
         input:focus { outline: none; }
         @media (max-width: 768px) {
           .login-left { display: none !important; }
-          .login-right { width: 100% !important; }
+          .login-right {
+            width: 100% !important;
+            min-width: unset !important;
+            padding: 20px !important;
+          }
           .mobile-header { display: flex !important; }
+        }
+        @media (max-width: 480px) {
+          .login-right { padding: 16px !important; }
         }
       `}</style>
     </div>
