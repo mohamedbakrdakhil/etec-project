@@ -11,6 +11,7 @@ const absencesCtrl = require('../controllers/absencesController');
 const academicCtrl = require('../controllers/academicController');
 const planningCtrl = require('../controllers/planningController');
 const dashboardCtrl = require('../controllers/dashboardController');
+const paiementsCtrl = require('../controllers/paiementsController');
 
 // Strict rate limiter for login (brute force protection)
 const loginLimiter = rateLimit({
@@ -87,6 +88,14 @@ router.get('/dashboard/logs', auth, authorize('developpeur'), dashboardCtrl.getL
 router.get('/enseignements', auth, authorize('developpeur', 'admin'), dashboardCtrl.getEnseignements);
 router.post('/enseignements', auth, authorize('developpeur', 'admin'), dashboardCtrl.createEnseignement);
 router.delete('/enseignements/:id', auth, authorize('developpeur', 'admin'), dashboardCtrl.deleteEnseignement);
+
+// ==================== PAIEMENTS ====================
+router.get('/paiements', auth, authorize('developpeur', 'admin'), paiementsCtrl.getPaiements);
+router.get('/paiements/summary', auth, authorize('developpeur', 'admin'), paiementsCtrl.getSummaryByEtudiant);
+router.get('/paiements/etudiant/:etudiantId', auth, authorize('developpeur', 'admin'), paiementsCtrl.getPaiementsEtudiant);
+router.post('/paiements', auth, authorize('developpeur', 'admin'), paiementsCtrl.addPaiement);
+router.put('/paiements/:id', auth, authorize('developpeur', 'admin'), paiementsCtrl.updatePaiement);
+router.delete('/paiements/:id', auth, authorize('developpeur', 'admin'), paiementsCtrl.deletePaiement);
 
 // ==================== ANNONCES ====================
 router.get('/annonces', auth, dashboardCtrl.getAnnonces);

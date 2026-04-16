@@ -14,6 +14,7 @@ import Planning from './pages/Planning';
 import Enseignements from './pages/Enseignements';
 import Annonces from './pages/Annonces';
 import Logs from './pages/Logs';
+import Paiements from './pages/Paiements';
 import ProfDashboard from './pages/ProfDashboard';
 import EtudiantDashboard from './pages/EtudiantDashboard';
 import EtudiantNotes from './pages/EtudiantNotes';
@@ -60,6 +61,7 @@ function App() {
             <Route path="absences" element={<Absences />} />
             <Route path="planning" element={<Planning />} />
             <Route path="enseignements" element={<Enseignements />} />
+            <Route path="paiements" element={<Paiements />} />
             <Route path="annonces" element={<Annonces />} />
             <Route path="logs" element={<Logs />} />
           </Route>
@@ -79,6 +81,7 @@ function App() {
             <Route path="absences" element={<Absences />} />
             <Route path="planning" element={<Planning />} />
             <Route path="enseignements" element={<Enseignements />} />
+            <Route path="paiements" element={<Paiements />} />
             <Route path="annonces" element={<Annonces />} />
           </Route>
 
