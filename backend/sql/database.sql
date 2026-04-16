@@ -173,6 +173,24 @@ CREATE TABLE system_logs (
 );
 
 -- =============================================
+-- Table des paiements étudiants
+-- =============================================
+CREATE TABLE IF NOT EXISTS paiements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    etudiant_id INT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    date_paiement DATE NOT NULL,
+    type_paiement ENUM('inscription', 'mensualite', 'autre') DEFAULT 'mensualite',
+    mois VARCHAR(30),
+    methode ENUM('especes', 'virement', 'cheque') DEFAULT 'especes',
+    observation TEXT,
+    saisi_par INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (etudiant_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (saisi_par) REFERENCES users(id)
+);
+
+-- =============================================
 -- Compte développeur par défaut
 -- password: admin123 (hash bcrypt)
 -- =============================================
