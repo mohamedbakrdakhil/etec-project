@@ -54,7 +54,7 @@ const Users = () => {
       setShowModal(false);
       fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur');
+      setError(err.response?.data?.message || 'Erreur serveur — vérifiez que l\'email n\'est pas déjà utilisé.');
     }
   };
 
