@@ -14,6 +14,10 @@ const Users = () => {
   const [editUser, setEditUser] = useState(null);
   const [form, setForm] = useState({ nom: '', prenom: '', email: '', password: '', telephone: '', cin: '', adresse: '', role: 'etudiant' });
   const [error, setError] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordUser, setPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -62,12 +66,25 @@ const Users = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleResetPassword = async (id) => {
-    if (!window.confirm('Réinitialiser le mot de passe à "etec2024" ?')) return;
+  const openPasswordModal = (u) => {
+    setPasswordUser(u);
+    setNewPassword('');
+    setPasswordError('');
+    setShowPasswordModal(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 4) {
+      setPasswordError('Le mot de passe doit contenir au moins 4 caractères.');
+      return;
+    }
     try {
-      await api.put(`/users/${id}/reset-password`, { newPassword: 'etec2024' });
-      alert('Mot de passe réinitialisé.');
-    } catch (err) { console.error(err); }
+      await api.put(`/users/${passwordUser.id}/reset-password`, { newPassword });
+      setShowPasswordModal(false);
+      alert(`✅ Mot de passe de ${passwordUser.nom} ${passwordUser.prenom} modifié avec succès!`);
+    } catch (err) {
+      setPasswordError('Erreur lors de la modification.');
+    }
   };
 
   const getRoleBadge = (role) => {
@@ -132,7 +149,7 @@ const Users = () => {
                   <td>
                     <div className="flex gap-8">
                       <button className="btn-icon edit" onClick={() => openEdit(u)} title="Modifier">✏️</button>
-                      <button className="btn-icon" onClick={() => handleResetPassword(u.id)} title="Reset MDP">🔑</button>
+                      <button className="btn-icon" onClick={() => openPasswordModal(u)} title="Changer MDP">🔑</button>
                       <button className="btn-icon danger" onClick={() => handleDelete(u.id)} title="Supprimer">🗑️</button>
                     </div>
                   </td>
@@ -197,6 +214,29 @@ const Users = () => {
           <select className="form-control" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
             {roleOptions.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
           </select>
+        </div>
+      </Modal>
+
+      {/* Modal Changer Mot de Passe */}
+      <Modal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)}
+        title={`🔑 Changer mot de passe — ${passwordUser?.nom} ${passwordUser?.prenom}`}
+        footer={<>
+          <button className="btn btn-outline" onClick={() => setShowPasswordModal(false)}>Annuler</button>
+          <button className="btn btn-primary" onClick={handleResetPassword}>Confirmer</button>
+        </>}
+      >
+        {passwordError && <div className="login-error">{passwordError}</div>}
+        <div className="form-group">
+          <label>Nouveau mot de passe *</label>
+          <input
+            type="password"
+            className="form-control"
+            placeholder="Entrez le nouveau mot de passe..."
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            autoFocus
+          />
+          <small style={{color:'#6B7280', marginTop: 4, display:'block'}}>Minimum 4 caractères</small>
         </div>
       </Modal>
     </div>
