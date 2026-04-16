@@ -6,11 +6,7 @@ const Layout = ({ pageTitle, pageSubtitle }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.classList.add('sidebar-open');
-    } else {
-      document.body.classList.remove('sidebar-open');
-    }
+    document.body.classList.toggle('sidebar-open', sidebarOpen);
     return () => document.body.classList.remove('sidebar-open');
   }, [sidebarOpen]);
 
