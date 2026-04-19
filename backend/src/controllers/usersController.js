@@ -1,6 +1,12 @@
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 
+const ALLOWED_ROLES = ['developpeur', 'admin', 'professeur', 'etudiant'];
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const sanitizeStr = (val) => (typeof val === 'string' ? val.trim() : val);
+
 // Lister les utilisateurs (avec filtres)
 exports.getUsers = async (req, res) => {
   try {
@@ -73,7 +79,27 @@ exports.getUserById = async (req, res) => {
 // Créer un utilisateur
 exports.createUser = async (req, res) => {
   try {
-    const { nom, prenom, email, password, telephone, cin, adresse, role } = req.body;
+    const nom = sanitizeStr(req.body.nom);
+    const prenom = sanitizeStr(req.body.prenom);
+    const email = sanitizeStr(req.body.email)?.toLowerCase();
+    const password = req.body.password;
+    const telephone = sanitizeStr(req.body.telephone);
+    const cin = sanitizeStr(req.body.cin);
+    const adresse = sanitizeStr(req.body.adresse);
+    const role = sanitizeStr(req.body.role);
+
+    // Validate required fields
+    if (!nom || !prenom || !email) {
+      return res.status(400).json({ message: 'Nom, prénom et email sont requis.' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Format email invalide.' });
+    }
+
+    if (!ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Rôle invalide.' });
+    }
 
     // Vérifier que l'admin ne crée pas de développeur
     if (req.user.role === 'admin' && role === 'developpeur') {
@@ -111,8 +137,23 @@ exports.createUser = async (req, res) => {
 // Modifier un utilisateur
 exports.updateUser = async (req, res) => {
   try {
-    const { nom, prenom, email, telephone, cin, adresse, role, is_active } = req.body;
+    const nom = sanitizeStr(req.body.nom);
+    const prenom = sanitizeStr(req.body.prenom);
+    const email = sanitizeStr(req.body.email)?.toLowerCase();
+    const telephone = sanitizeStr(req.body.telephone);
+    const cin = sanitizeStr(req.body.cin);
+    const adresse = sanitizeStr(req.body.adresse);
+    const role = sanitizeStr(req.body.role);
+    const { is_active } = req.body;
     const userId = req.params.id;
+
+    if (email && !isValidEmail(email)) {
+      return res.status(400).json({ message: 'Format email invalide.' });
+    }
+
+    if (role && !ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Rôle invalide.' });
+    }
 
     // Vérifier que l'utilisateur existe
     const [existing] = await db.query('SELECT role FROM users WHERE id = ?', [userId]);

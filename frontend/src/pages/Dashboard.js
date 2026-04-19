@@ -5,22 +5,24 @@ import { useAuth } from '../context/AuthContext';
 
 const useCounter = (target, duration = 1500) => {
   const [count, setCount] = useState(0);
+  const numTarget = Number(target) || 0;
   useEffect(() => {
-    if (!target) return;
+    if (numTarget <= 0) { setCount(0); return; }
     let start = 0;
-    const step = target / (duration / 16);
+    const step = numTarget / (duration / 16);
     const timer = setInterval(() => {
       start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
+      if (start >= numTarget) { setCount(numTarget); clearInterval(timer); }
       else setCount(Math.floor(start));
     }, 16);
     return () => clearInterval(timer);
-  }, [target, duration]);
+  }, [numTarget, duration]);
   return count;
 };
 
 const StatCard = ({ icon, value, label, gradient, color, delay = 0 }) => {
-  const count = useCounter(value);
+  const numValue = Number(value) || 0;
+  const count = useCounter(numValue);
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
   return (
