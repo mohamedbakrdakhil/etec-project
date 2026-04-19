@@ -10,15 +10,17 @@ const ProfDashboard = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    api.get('/planning').then(r => setPlanning(r.data)).catch(console.error);
+    api.get('/planning')
+      .then(r => setPlanning(Array.isArray(r.data) ? r.data : []))
+      .catch(console.error);
     setTimeout(() => setVisible(true), 100);
   }, []);
 
   const jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
   const jourActuel = jours[new Date().getDay()];
-  const coursAujourdhui = planning.filter(p => p.jour === jourActuel).sort((a, b) => a.heure_debut?.localeCompare(b.heure_debut));
+  const coursAujourdhui = (planning || []).filter(p => p.jour === jourActuel).sort((a, b) => (a.heure_debut || '').localeCompare(b.heure_debut || ''));
   const demain = jours[(new Date().getDay() + 1) % 7];
-  const coursDemain = planning.filter(p => p.jour === demain);
+  const coursDemain = (planning || []).filter(p => p.jour === demain);
 
   const timeToMinutes = (t) => { if (!t) return 0; const [h, m] = t.split(':'); return parseInt(h) * 60 + parseInt(m); };
   const now = new Date();
@@ -39,7 +41,7 @@ const ProfDashboard = () => {
   }[status]);
 
   const jours_semaine = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-  const coursParJour = jours_semaine.map(j => ({ jour: j, nb: planning.filter(p => p.jour === j).length }));
+  const coursParJour = jours_semaine.map(j => ({ jour: j, nb: (planning || []).filter(p => p.jour === j).length }));
 
   return (
     <div>
@@ -73,7 +75,7 @@ const ProfDashboard = () => {
           { icon: '📚', value: planning.length, label: 'Séances/semaine', gradient: 'linear-gradient(135deg,#3B82F6,#60A5FA)', color: '#3B82F6' },
           { icon: '📅', value: coursAujourdhui.length, label: `Cours aujourd'hui`, gradient: 'linear-gradient(135deg,#10B981,#34D399)', color: '#10B981' },
           { icon: '⏭️', value: coursDemain.length, label: 'Cours demain', gradient: 'linear-gradient(135deg,#8B5CF6,#A78BFA)', color: '#8B5CF6' },
-          { icon: '📍', value: [...new Set(planning.map(p => p.salle).filter(Boolean))].length, label: 'Salles', gradient: 'linear-gradient(135deg,#F59E0B,#FCD34D)', color: '#F59E0B' },
+          { icon: '📍', value: [...new Set((planning || []).map(p => p.salle).filter(Boolean))].length, label: 'Salles', gradient: 'linear-gradient(135deg,#F59E0B,#FCD34D)', color: '#F59E0B' },
         ].map((s, i) => (
           <div key={i} style={{
             background: 'white', borderRadius: 18, padding: '20px 16px',
