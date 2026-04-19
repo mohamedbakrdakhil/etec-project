@@ -36,6 +36,26 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// XSS protection: strip dangerous patterns from request body and query
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    Object.keys(obj).forEach(key => {
+      if (typeof obj[key] === 'string') {
+        obj[key] = obj[key]
+          .replace(/<script[^>]*?>.*?<\/script>/gi, '')
+          .replace(/javascript:/gi, '')
+          .trim();
+      } else if (typeof obj[key] === 'object') {
+        sanitize(obj[key]);
+      }
+    });
+  };
+  sanitize(req.body);
+  sanitize(req.query);
+  next();
+});
+
 // General rate limiter for all API routes
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

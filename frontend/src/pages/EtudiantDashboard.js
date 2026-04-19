@@ -22,7 +22,14 @@ const EtudiantDashboard = () => {
 
   useEffect(() => {
     Promise.all([api.get('/notes/bulletin'), api.get('/absences/summary')])
-      .then(([b, a]) => { setBulletin(b.data); setAbsenceSummary(a.data); })
+      .then(([b, a]) => {
+        const bulletinData = b.data || {};
+        if (!Array.isArray(bulletinData.modules)) bulletinData.modules = [];
+        setBulletin(bulletinData);
+        const absenceData = a.data || {};
+        if (!Array.isArray(absenceData.summary)) absenceData.summary = [];
+        setAbsenceSummary(absenceData);
+      })
       .catch(console.error);
     setTimeout(() => setVisible(true), 100);
   }, []);
@@ -73,7 +80,7 @@ const EtudiantDashboard = () => {
           { icon: '📊', value: moyG ? `${moyG.toFixed(2)}/20` : '—', label: 'Moyenne générale', gradient: 'linear-gradient(135deg,#10B981,#34D399)', color: '#10B981' },
           { icon: '📚', value: bulletin?.modules?.length ?? 0, label: 'Modules', gradient: 'linear-gradient(135deg,#3B82F6,#60A5FA)', color: '#3B82F6' },
           { icon: '📅', value: absenceSummary?.totalAbsences ?? 0, label: 'Total absences', gradient: 'linear-gradient(135deg,#EF4444,#F87171)', color: '#EF4444' },
-          { icon: '✅', value: absenceSummary?.summary?.reduce((a, s) => a + (s.justifiees || 0), 0) ?? 0, label: 'Justifiées', gradient: 'linear-gradient(135deg,#F59E0B,#FCD34D)', color: '#F59E0B' },
+          { icon: '✅', value: (absenceSummary?.summary || []).reduce((a, s) => a + (s.justifiees || 0), 0), label: 'Justifiées', gradient: 'linear-gradient(135deg,#F59E0B,#FCD34D)', color: '#F59E0B' },
         ].map((s, i) => (
           <div key={i} style={{
             background: 'white', borderRadius: 18, padding: '20px 16px',
@@ -105,12 +112,12 @@ const EtudiantDashboard = () => {
           </div>
         </div>
         <div style={{ padding: '8px 0' }}>
-          {!bulletin?.modules?.length ? (
+          {!(bulletin?.modules?.length) ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
               <div>Aucune note disponible</div>
             </div>
-          ) : bulletin.modules.map((m, i) => (
+          ) : (bulletin.modules || []).map((m, i) => (
             <div key={i} style={{ padding: '14px 22px', borderBottom: i < bulletin.modules.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
@@ -130,9 +137,9 @@ const EtudiantDashboard = () => {
                   <span style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>/20</span>
                 </div>
               )}
-              {m.notes?.length > 0 && (
+              {(m.notes?.length > 0) && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-                  {m.notes.map((n, j) => (
+                  {(m.notes || []).map((n, j) => (
                     <span key={j} style={{
                       padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
                       background: n.note >= 10 ? '#DCFCE7' : '#FEE2E2',
@@ -160,12 +167,12 @@ const EtudiantDashboard = () => {
           </div>
         </div>
         <div style={{ padding: '8px 0' }}>
-          {!absenceSummary?.summary?.length ? (
+          {!(absenceSummary?.summary?.length) ? (
             <div style={{ textAlign: 'center', padding: 32, color: '#94A3B8' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
               <div>Aucune absence enregistrée</div>
             </div>
-          ) : absenceSummary.summary.map((s, i) => (
+          ) : (absenceSummary.summary || []).map((s, i) => (
             <div key={i} style={{ padding: '14px 22px', borderBottom: i < absenceSummary.summary.length - 1 ? '1px solid #F8FAFC' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>{s.module_nom}</div>
               <div style={{ display: 'flex', gap: 8 }}>
