@@ -5,18 +5,10 @@ const db = require('../config/db');
 // Login
 exports.login = async (req, res) => {
   try {
-    const email = (req.body.email || '').toString().trim().toLowerCase();
-    const password = (req.body.password || '').toString();
+    const { email, password } = req.body;
 
-    // Basic validation
     if (!email || !password) {
-      return res.status(401).json({ message: 'Email ou mot de passe incorrect.' });
-    }
-
-    // Simple email format check
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(401).json({ message: 'Email ou mot de passe incorrect.' });
+      return res.status(400).json({ message: 'Email et mot de passe requis.' });
     }
 
     const [users] = await db.query('SELECT * FROM users WHERE email = ? AND is_active = TRUE', [email]);
