@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -53,6 +54,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [logs, setLogs] = useState([]);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [greeting, setGreeting] = useState('Bonjour');
 
   useEffect(() => {
@@ -136,14 +138,16 @@ const Dashboard = () => {
           <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 18, color: '#0F172A' }}>⚡ Accès Rapide</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {[
-              { icon: '👥', label: 'Utilisateurs', color: '#0B4F6C', bg: '#EFF6FF' },
-              { icon: '📝', label: 'Notes', color: '#10B981', bg: '#ECFDF5' },
-              { icon: '📅', label: 'Absences', color: '#EF4444', bg: '#FEF2F2' },
-              { icon: '🕐', label: 'Planning', color: '#8B5CF6', bg: '#F5F3FF' },
-              { icon: '🎓', label: 'Filières', color: '#F59E0B', bg: '#FFFBEB' },
-              { icon: '💳', label: 'Paiements', color: '#2E8B57', bg: '#F0FDF4' },
+              { icon: '👥', label: 'Utilisateurs', color: '#0B4F6C', bg: '#EFF6FF', path: 'users' },
+              { icon: '📝', label: 'Notes', color: '#10B981', bg: '#ECFDF5', path: 'notes' },
+              { icon: '📅', label: 'Absences', color: '#EF4444', bg: '#FEF2F2', path: 'absences' },
+              { icon: '🕐', label: 'Planning', color: '#8B5CF6', bg: '#F5F3FF', path: 'planning' },
+              { icon: '🎓', label: 'Filières', color: '#F59E0B', bg: '#FFFBEB', path: 'filieres' },
+              { icon: '💳', label: 'Paiements', color: '#2E8B57', bg: '#F0FDF4', path: 'paiements' },
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: item.bg, borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s ease', border: `1px solid ${item.color}18` }}
+              <div key={i}
+                onClick={() => navigate(`/${user?.role === 'developpeur' ? 'dev' : 'admin'}/${item.path}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: item.bg, borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s ease', border: `1px solid ${item.color}18` }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = `0 6px 16px ${item.color}22`; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
@@ -164,7 +168,7 @@ const Dashboard = () => {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {log.user_prenom} {log.user_nom}
+                    {log.prenom} {log.nom}
                   </div>
                   <div style={{ fontSize: 12, color: '#94A3B8' }}>{log.action}</div>
                 </div>

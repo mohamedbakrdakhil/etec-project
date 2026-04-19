@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +15,7 @@ const ProgressBar = ({ value, max = 20, color }) => {
 
 const EtudiantDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bulletin, setBulletin] = useState(null);
   const [absenceSummary, setAbsenceSummary] = useState(null);
   const [visible, setVisible] = useState(false);
@@ -97,7 +99,10 @@ const EtudiantDashboard = () => {
       <div style={{ background: 'white', borderRadius: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(226,232,240,0.8)', marginBottom: 20, animation: 'slideUp 0.5s ease 0.3s both' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>📝 Bulletin de Notes</h3>
-          {moyG && <span style={{ background: getNoteGradient(moyG), color: 'white', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>{moyG.toFixed(2)}/20</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {moyG && <span style={{ background: getNoteGradient(moyG), color: 'white', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>{moyG.toFixed(2)}/20</span>}
+            <span onClick={() => navigate('/etudiant/notes')} style={{ fontSize: 12, color: '#0B4F6C', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}>Voir tout →</span>
+          </div>
         </div>
         <div style={{ padding: '8px 0' }}>
           {!bulletin?.modules?.length ? (
@@ -147,9 +152,12 @@ const EtudiantDashboard = () => {
       <div style={{ background: 'white', borderRadius: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(226,232,240,0.8)', animation: 'slideUp 0.5s ease 0.4s both' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>📅 Mes Absences</h3>
-          <span style={{ background: '#FEE2E2', color: '#991B1B', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>
-            {absenceSummary?.totalAbsences ?? 0} absence(s)
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ background: '#FEE2E2', color: '#991B1B', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>
+              {absenceSummary?.totalAbsences ?? 0} absence(s)
+            </span>
+            <span onClick={() => navigate('/etudiant/absences')} style={{ fontSize: 12, color: '#0B4F6C', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}>Voir tout →</span>
+          </div>
         </div>
         <div style={{ padding: '8px 0' }}>
           {!absenceSummary?.summary?.length ? (
