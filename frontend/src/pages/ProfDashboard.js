@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const ProfDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [planning, setPlanning] = useState([]);
   const [visible, setVisible] = useState(false);
 
@@ -171,11 +173,11 @@ const ProfDashboard = () => {
           <div style={{ background: 'white', borderRadius: 20, padding: 22, boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(226,232,240,0.8)', animation: 'slideUp 0.5s ease 0.5s both' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 14 }}>🚀 Actions</h3>
             {[
-              { icon: '📝', label: 'Saisir les notes', desc: 'Entrer les résultats', color: '#10B981', bg: '#ECFDF5' },
-              { icon: '📅', label: 'Faire l\'appel', desc: 'Enregistrer les absences', color: '#EF4444', bg: '#FEF2F2' },
-              { icon: '🕐', label: 'Mon planning', desc: 'Voir mon emploi du temps', color: '#8B5CF6', bg: '#F5F3FF' },
+              { icon: '📝', label: 'Saisir les notes', desc: 'Entrer les résultats', color: '#10B981', bg: '#ECFDF5', path: '/prof/notes' },
+              { icon: '📅', label: 'Faire l\'appel', desc: 'Enregistrer les absences', color: '#EF4444', bg: '#FEF2F2', path: '/prof/absences' },
+              { icon: '🕐', label: 'Mon planning', desc: 'Voir mon emploi du temps', color: '#8B5CF6', bg: '#F5F3FF', path: '/prof/planning' },
             ].map((a, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, marginBottom: 8, background: a.bg, cursor: 'pointer', transition: 'all 0.2s ease', border: `1px solid ${a.color}18` }}
+              <div key={i} onClick={() => navigate(a.path)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, marginBottom: 8, background: a.bg, cursor: 'pointer', transition: 'all 0.2s ease', border: `1px solid ${a.color}18` }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = `0 4px 12px ${a.color}20`; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
