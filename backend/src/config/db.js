@@ -8,8 +8,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 30,      // 10 → 30 pour supporter 500 users
+  queueLimit: 100,          // file d'attente si toutes les connexions sont occupées
+  connectTimeout: 10000,    // timeout connexion 10s
+  timezone: '+01:00',       // GMT+1 Maroc
 });
 
 pool.getConnection()
