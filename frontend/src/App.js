@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
-import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
@@ -53,18 +52,18 @@ function App() {
               <Layout pageTitle="Espace Développeur" />
             </ProtectedRoute>
           }>
-            <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
-            <Route path="users" element={<ErrorBoundary><Users /></ErrorBoundary>} />
-            <Route path="filieres" element={<ErrorBoundary><Filieres /></ErrorBoundary>} />
-            <Route path="groupes" element={<ErrorBoundary><Groupes /></ErrorBoundary>} />
-            <Route path="modules" element={<ErrorBoundary><Modules /></ErrorBoundary>} />
-            <Route path="notes" element={<ErrorBoundary><Notes /></ErrorBoundary>} />
-            <Route path="absences" element={<ErrorBoundary><Absences /></ErrorBoundary>} />
-            <Route path="planning" element={<ErrorBoundary><Planning /></ErrorBoundary>} />
-            <Route path="enseignements" element={<ErrorBoundary><Enseignements /></ErrorBoundary>} />
-            <Route path="paiements" element={<ErrorBoundary><Paiements /></ErrorBoundary>} />
-            <Route path="annonces" element={<ErrorBoundary><Annonces /></ErrorBoundary>} />
-            <Route path="logs" element={<ErrorBoundary><Logs /></ErrorBoundary>} />
+            <Route index element={<Dashboard />} />
+            <Route path="users" element={<Users />} />
+            <Route path="filieres" element={<Filieres />} />
+            <Route path="groupes" element={<Groupes />} />
+            <Route path="modules" element={<Modules />} />
+            <Route path="notes" element={<Notes />} />
+            <Route path="absences" element={<Absences />} />
+            <Route path="planning" element={<Planning />} />
+            <Route path="enseignements" element={<Enseignements />} />
+            <Route path="paiements" element={<Paiements />} />
+            <Route path="annonces" element={<Annonces />} />
+            <Route path="logs" element={<Logs />} />
           </Route>
 
           {/* ==================== ADMIN ==================== */}
@@ -73,17 +72,17 @@ function App() {
               <Layout pageTitle="Administration" />
             </ProtectedRoute>
           }>
-            <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
-            <Route path="users" element={<ErrorBoundary><Users /></ErrorBoundary>} />
-            <Route path="filieres" element={<ErrorBoundary><Filieres /></ErrorBoundary>} />
-            <Route path="groupes" element={<ErrorBoundary><Groupes /></ErrorBoundary>} />
-            <Route path="modules" element={<ErrorBoundary><Modules /></ErrorBoundary>} />
-            <Route path="notes" element={<ErrorBoundary><Notes /></ErrorBoundary>} />
-            <Route path="absences" element={<ErrorBoundary><Absences /></ErrorBoundary>} />
-            <Route path="planning" element={<ErrorBoundary><Planning /></ErrorBoundary>} />
-            <Route path="enseignements" element={<ErrorBoundary><Enseignements /></ErrorBoundary>} />
-            <Route path="paiements" element={<ErrorBoundary><Paiements /></ErrorBoundary>} />
-            <Route path="annonces" element={<ErrorBoundary><Annonces /></ErrorBoundary>} />
+            <Route index element={<Dashboard />} />
+            <Route path="users" element={<Users />} />
+            <Route path="filieres" element={<Filieres />} />
+            <Route path="groupes" element={<Groupes />} />
+            <Route path="modules" element={<Modules />} />
+            <Route path="notes" element={<Notes />} />
+            <Route path="absences" element={<Absences />} />
+            <Route path="planning" element={<Planning />} />
+            <Route path="enseignements" element={<Enseignements />} />
+            <Route path="paiements" element={<Paiements />} />
+            <Route path="annonces" element={<Annonces />} />
           </Route>
 
           {/* ==================== PROFESSEUR ==================== */}
@@ -92,10 +91,10 @@ function App() {
               <Layout pageTitle="Espace Professeur" />
             </ProtectedRoute>
           }>
-            <Route index element={<ErrorBoundary><ProfDashboard /></ErrorBoundary>} />
-            <Route path="notes" element={<ErrorBoundary><Notes /></ErrorBoundary>} />
-            <Route path="absences" element={<ErrorBoundary><Absences /></ErrorBoundary>} />
-            <Route path="planning" element={<ErrorBoundary><Planning readOnly /></ErrorBoundary>} />
+            <Route index element={<ProfDashboard />} />
+            <Route path="notes" element={<Notes />} />
+            <Route path="absences" element={<Absences />} />
+            <Route path="planning" element={<Planning readOnly />} />
           </Route>
 
           {/* ==================== ÉTUDIANT ==================== */}
@@ -104,10 +103,10 @@ function App() {
               <Layout pageTitle="Espace Étudiant" />
             </ProtectedRoute>
           }>
-            <Route index element={<ErrorBoundary><EtudiantDashboard /></ErrorBoundary>} />
-            <Route path="notes" element={<ErrorBoundary><EtudiantNotes /></ErrorBoundary>} />
-            <Route path="absences" element={<ErrorBoundary><EtudiantAbsences /></ErrorBoundary>} />
-            <Route path="planning" element={<ErrorBoundary><Planning readOnly /></ErrorBoundary>} />
+            <Route index element={<EtudiantDashboard />} />
+            <Route path="notes" element={<EtudiantNotes />} />
+            <Route path="absences" element={<EtudiantAbsences />} />
+            <Route path="planning" element={<Planning readOnly />} />
           </Route>
 
           {/* 404 */}
