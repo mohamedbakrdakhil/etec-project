@@ -2,12 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const path = require('path');
 require('dotenv').config();
 
 const apiRoutes = require('./routes/api');
 
 const app = express();
+
+// Compression GZIP - réduit la taille des réponses de 60-80%
+app.use(compression());
 
 // Security headers
 app.use(helmet({
@@ -56,16 +60,30 @@ app.use((req, res, next) => {
   next();
 });
 
-// General rate limiter for all API routes
+// General rate limiter - 500 req/15min par IP (suffisant pour usage normal)
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  windowMs: 15 * 60 * 1000,
+  max: 500,                  // 200 → 500 pour ne pas bloquer les vrais users
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Trop de requêtes, veuillez réessayer dans 15 minutes.' },
+  skip: (req) => {           // ne pas limiter les requêtes GET (lecture seule)
+    return req.method === 'GET';
+  },
+  message: { message: 'Trop de requêtes, veuillez réessayer dans quelques minutes.' },
 });
 
 app.use('/api', generalLimiter);
+
+// Cache-Control pour les endpoints de lecture fréquente
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    // données qui changent rarement: 30 secondes de cache
+    res.set('Cache-Control', 'private, max-age=30');
+  } else {
+    res.set('Cache-Control', 'no-store');
+  }
+  next();
+});
 
 // API Routes
 app.use('/api', apiRoutes);
