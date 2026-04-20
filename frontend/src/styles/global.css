@@ -156,6 +156,30 @@ img { max-width: 100%; }
   50%       { box-shadow: 0 0 40px rgba(6,214,160,0.4), 0 0 60px rgba(6,214,160,0.1); }
 }
 
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(28px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+@keyframes iconBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35) rotate(-8deg); }
+  70%  { transform: scale(0.9)  rotate(4deg); }
+  100% { transform: scale(1); }
+}
+@keyframes shimmerSweep {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(200%); }
+}
+@keyframes particleRise {
+  0%   { transform: translateY(0)     scale(1);   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-600px) scale(0.3); opacity: 0; }
+}
 @keyframes aiPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(6,214,160,0.5), 0 8px 32px rgba(6,214,160,0.35); }
   50%       { box-shadow: 0 0 0 12px rgba(6,214,160,0), 0 8px 32px rgba(6,214,160,0.35); }
