@@ -19,6 +19,7 @@ import ProfDashboard from './pages/ProfDashboard';
 import EtudiantDashboard from './pages/EtudiantDashboard';
 import EtudiantNotes from './pages/EtudiantNotes';
 import EtudiantAbsences from './pages/EtudiantAbsences';
+import AIAssistant from './components/AIAssistant';
 
 // Protected Route
 const ProtectedRoute = ({ children, roles }) => {
@@ -35,6 +36,13 @@ const RoleRedirect = () => {
   if (!user) return <Navigate to="/login" />;
   const routes = { developpeur: '/dev', admin: '/admin', professeur: '/prof', etudiant: '/etudiant' };
   return <Navigate to={routes[user.role] || '/login'} />;
+};
+
+// Show AI only when logged in
+const AIAssistantWrapper = () => {
+  const { user } = useAuth();
+  if (!user) return null;
+  return <AIAssistant />;
 };
 
 function App() {
@@ -112,6 +120,7 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        <AIAssistantWrapper />
       </BrowserRouter>
     </AuthProvider>
   );
