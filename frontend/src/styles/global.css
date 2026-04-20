@@ -156,6 +156,27 @@ img { max-width: 100%; }
   50%       { box-shadow: 0 0 40px rgba(6,214,160,0.4), 0 0 60px rgba(6,214,160,0.1); }
 }
 
+@keyframes aiPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(6,214,160,0.5), 0 8px 32px rgba(6,214,160,0.35); }
+  50%       { box-shadow: 0 0 0 12px rgba(6,214,160,0), 0 8px 32px rgba(6,214,160,0.35); }
+}
+@keyframes aiSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes aiBounce {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40%           { transform: scale(1.2); opacity: 1; }
+}
+@keyframes aiCursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* ==================== LAYOUT ==================== */
 .app-layout {
   display: flex;
