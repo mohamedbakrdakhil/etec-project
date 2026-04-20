@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ETECHero from '../components/ETECHero';
 
 /* ---- Animated counter hook ---- */
 const useCounter = (target, duration = 1800, delay = 0) => {
@@ -194,56 +195,8 @@ const Dashboard = () => {
   return (
     <div style={{ position: 'relative' }}>
 
-      {/* ── HERO HEADER ── */}
-      <div style={{
-        position: 'relative',
-        background: 'linear-gradient(135deg, rgba(6,214,160,0.06) 0%, rgba(124,58,237,0.06) 50%, rgba(14,165,233,0.04) 100%)',
-        border: '1px solid var(--border)',
-        borderRadius: 24,
-        padding: '32px 32px 28px',
-        marginBottom: 28,
-        overflow: 'hidden',
-        animation: 'cardEntrance 0.7s cubic-bezier(0.34,1.56,0.64,1) both',
-      }}>
-        <Particles />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: 'linear-gradient(135deg, var(--accent), #7C3AED)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0,
-                }}>🎓</div>
-                <div>
-                  <h2 style={{
-                    fontSize: 26, fontWeight: 800, margin: 0,
-                    background: 'linear-gradient(135deg, var(--text) 30%, var(--accent))',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                  }}>
-                    ETEC Fès
-                  </h2>
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--accent)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-                    L'innovation est dans notre ADN
-                  </p>
-                </div>
-              </div>
-              <p style={{ margin: '10px 0 0', color: 'var(--text-muted)', fontSize: 14.5, minHeight: 22 }}>
-                {typedGreeting}
-                <span style={{ animation: 'aiCursor 0.8s ease-in-out infinite', display: 'inline-block', width: 2, height: 14, background: 'var(--accent)', marginLeft: 2, verticalAlign: 'middle' }} />
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'aiPulse 2s ease-in-out infinite' }} />
-              <span style={{ fontSize: 12, color: '#10B981', fontWeight: 600 }}>Système actif</span>
-              <span className="badge badge-blue" style={{ marginLeft: 8 }}>
-                {user?.role === 'developpeur' ? 'Développeur' : 'Administration'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ── ETEC HERO (shared) ── */}
+      <ETECHero user={user} />
 
       {/* ── STATS GRID ── */}
       <div style={{
@@ -254,25 +207,6 @@ const Dashboard = () => {
       }}>
         {cards.map((c, i) => (
           <StatCard key={c.label} {...c} index={i} onClick={() => navigate(c.path)} />
-        ))}
-      </div>
-
-      {/* ── ETEC BRANDING BAR ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-        gap: 12,
-        marginBottom: 28,
-      }}>
-        {[
-          { icon: '🏛️', value: '1985',          label: 'Année de fondation',      color: '#7C3AED' },
-          { icon: '✅', value: '2005',           label: 'Accréditée depuis',        color: '#10B981' },
-          { icon: '📅', value: `${new Date().getFullYear() - 1985}+`, label: 'Ans d\'expérience', color: '#F59E0B' },
-          { icon: '📍', value: 'Fès',            label: 'Maroc',                    color: '#0EA5E9' },
-          { icon: '🤝', value: 'FEDE · FIEP',   label: 'Partenariats',             color: '#EF4444' },
-          { icon: '💡', value: 'Innovation',     label: 'Dans notre ADN',           color: '#06D6A0' },
-        ].map((item, i) => (
-          <BrandCard key={item.label} {...item} delay={i * 70} />
         ))}
       </div>
 
