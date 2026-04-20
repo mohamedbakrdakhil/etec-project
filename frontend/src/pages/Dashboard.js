@@ -209,16 +209,29 @@ const Dashboard = () => {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h2 style={{
-                fontSize: 28, fontWeight: 800, margin: 0,
-                background: 'linear-gradient(135deg, var(--text) 30%, var(--accent))',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
-                Tableau de bord
-              </h2>
-              <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 15, minHeight: 22 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10,
+                  background: 'linear-gradient(135deg, var(--accent), #7C3AED)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0,
+                }}>🎓</div>
+                <div>
+                  <h2 style={{
+                    fontSize: 26, fontWeight: 800, margin: 0,
+                    background: 'linear-gradient(135deg, var(--text) 30%, var(--accent))',
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  }}>
+                    ETEC Fès
+                  </h2>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--accent)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
+                    L'innovation est dans notre ADN
+                  </p>
+                </div>
+              </div>
+              <p style={{ margin: '10px 0 0', color: 'var(--text-muted)', fontSize: 14.5, minHeight: 22 }}>
                 {typedGreeting}
-                <span style={{ animation: 'aiCursor 0.8s ease-in-out infinite', display: 'inline-block', width: 2, height: 16, background: 'var(--accent)', marginLeft: 2, verticalAlign: 'middle' }} />
+                <span style={{ animation: 'aiCursor 0.8s ease-in-out infinite', display: 'inline-block', width: 2, height: 14, background: 'var(--accent)', marginLeft: 2, verticalAlign: 'middle' }} />
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -241,6 +254,25 @@ const Dashboard = () => {
       }}>
         {cards.map((c, i) => (
           <StatCard key={c.label} {...c} index={i} onClick={() => navigate(c.path)} />
+        ))}
+      </div>
+
+      {/* ── ETEC BRANDING BAR ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+        gap: 12,
+        marginBottom: 28,
+      }}>
+        {[
+          { icon: '🏛️', value: '1985',          label: 'Année de fondation',      color: '#7C3AED' },
+          { icon: '✅', value: '2005',           label: 'Accréditée depuis',        color: '#10B981' },
+          { icon: '📅', value: `${new Date().getFullYear() - 1985}+`, label: 'Ans d\'expérience', color: '#F59E0B' },
+          { icon: '📍', value: 'Fès',            label: 'Maroc',                    color: '#0EA5E9' },
+          { icon: '🤝', value: 'FEDE · FIEP',   label: 'Partenariats',             color: '#EF4444' },
+          { icon: '💡', value: 'Innovation',     label: 'Dans notre ADN',           color: '#06D6A0' },
+        ].map((item, i) => (
+          <BrandCard key={item.label} {...item} delay={i * 70} />
         ))}
       </div>
 
@@ -301,6 +333,35 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---- Brand info card ---- */
+const BrandCard = ({ icon, value, label, color, delay }) => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), delay + 800); return () => clearTimeout(t); }, [delay]);
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 14,
+      padding: '14px 16px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(12px)',
+      transition: 'all 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+    }}>
+      <div style={{
+        width: 38, height: 38, borderRadius: 10,
+        background: `${color}18`, border: `1px solid ${color}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18, flexShrink: 0,
+      }}>{icon}</div>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 15, color: color }}>{value}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{label}</div>
       </div>
     </div>
   );
