@@ -1,12 +1,21 @@
 const db = require('../config/db');
 
+// Auto-create statut column on module load
+(async () => {
+  try {
+    await db.query("ALTER TABLE planning ADD COLUMN statut VARCHAR(20) DEFAULT 'actif'");
+  } catch (err) {
+    if (err.errno !== 1060) console.error('planningController init:', err.message);
+  }
+})();
+
 // Obtenir le planning
 exports.getPlanning = async (req, res) => {
   try {
     const { groupe_id, professeur_id } = req.query;
 
     let query = `
-      SELECT p.*, g.nom as groupe_nom, m.nom as module_nom,
+      SELECT p.*, COALESCE(p.statut, 'actif') as statut, g.nom as groupe_nom, m.nom as module_nom,
              u.nom as prof_nom, u.prenom as prof_prenom,
              f.nom as filiere_nom
       FROM planning p
@@ -98,14 +107,42 @@ exports.addSeance = async (req, res) => {
 // Modifier une séance
 exports.updateSeance = async (req, res) => {
   try {
-    const { groupe_id, module_id, professeur_id, jour, heure_debut, heure_fin, salle } = req.body;
+    const { groupe_id, module_id, professeur_id, jour, heure_debut, heure_fin, salle, statut } = req.body;
 
-    await db.query(
-      'UPDATE planning SET groupe_id=?, module_id=?, professeur_id=?, jour=?, heure_debut=?, heure_fin=?, salle=? WHERE id=?',
-      [groupe_id, module_id, professeur_id, jour, heure_debut, heure_fin, salle, req.params.id]
-    );
+    let query = 'UPDATE planning SET groupe_id=?, module_id=?, professeur_id=?, jour=?, heure_debut=?, heure_fin=?, salle=?';
+    const params = [groupe_id, module_id, professeur_id, jour, heure_debut, heure_fin, salle];
+
+    if (statut) {
+      query += ', statut=?';
+      params.push(statut);
+    }
+
+    query += ' WHERE id=?';
+    params.push(req.params.id);
+
+    await db.query(query, params);
 
     res.json({ message: 'Séance modifiée.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+};
+
+// Annuler une séance
+exports.cancelSeance = async (req, res) => {
+  try {
+    await db.query("UPDATE planning SET statut='annulé' WHERE id=?", [req.params.id]);
+    res.json({ message: 'Séance annulée.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+};
+
+// Restaurer une séance annulée
+exports.restoreSeance = async (req, res) => {
+  try {
+    await db.query("UPDATE planning SET statut='actif' WHERE id=?", [req.params.id]);
+    res.json({ message: 'Séance restaurée.' });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
