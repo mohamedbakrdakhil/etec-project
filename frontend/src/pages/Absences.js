@@ -559,12 +559,222 @@ const AdminAbsenceView = () => {
 };
 
 /* ================================================================
+   PROF ABSENCES TAB — admin marks professors absent
+   ================================================================ */
+const ProfAbsencesTab = () => {
+  const [absencesProfs, setAbsencesProfs] = useState([]);
+  const [profs, setProfs] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ professeur_id: '', date_absence: new Date().toISOString().split('T')[0], motif: '' });
+  const [loading, setLoading] = useState(false);
+
+  const fetchAbsencesProfs = useCallback(async () => {
+    try {
+      const res = await api.get('/absences/profs');
+      setAbsencesProfs(Array.isArray(res.data) ? res.data : []);
+    } catch (err) { console.error(err); }
+  }, []);
+
+  useEffect(() => {
+    fetchAbsencesProfs();
+    api.get('/users?role=professeur&limit=100')
+      .then(r => setProfs(Array.isArray(r.data?.users) ? r.data.users : []))
+      .catch(console.error);
+  }, [fetchAbsencesProfs]);
+
+  const handleAdd = async () => {
+    if (!form.professeur_id || !form.date_absence) return alert('Professeur et date sont requis.');
+    setLoading(true);
+    try {
+      await api.post('/absences/profs', form);
+      setShowModal(false);
+      setForm({ professeur_id: '', date_absence: new Date().toISOString().split('T')[0], motif: '' });
+      fetchAbsencesProfs();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer cette absence ?')) return;
+    try {
+      await api.delete(`/absences/profs/${id}`);
+      fetchAbsencesProfs();
+    } catch (err) { console.error(err); }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          + Marquer Prof Absent
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h3>🔴 {absencesProfs.length} absence(s) de professeurs</h3>
+        </div>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Professeur</th>
+                <th>Date</th>
+                <th>Motif</th>
+                <th>Enregistré par</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {absencesProfs.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center text-muted" style={{ padding: 30 }}>
+                    Aucune absence professeur enregistrée
+                  </td>
+                </tr>
+              ) : absencesProfs.map(a => (
+                <tr key={a.id}>
+                  <td>
+                    <strong>{a.prof_nom} {a.prof_prenom}</strong>
+                  </td>
+                  <td>{new Date(a.date_absence).toLocaleDateString('fr-FR')}</td>
+                  <td>{a.motif || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>—</span>}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {a.created_by_nom} {a.created_by_prenom}
+                  </td>
+                  <td>
+                    <button className="btn-icon danger" onClick={() => handleDelete(a.id)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Marquer un Professeur Absent"
+        footer={
+          <>
+            <button className="btn btn-outline" onClick={() => setShowModal(false)}>Annuler</button>
+            <button className="btn btn-danger" onClick={handleAdd} disabled={loading}>
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </>
+        }
+      >
+        <div className="form-group">
+          <label>Professeur *</label>
+          <select
+            className="form-control"
+            value={form.professeur_id}
+            onChange={e => setForm({ ...form, professeur_id: e.target.value })}
+          >
+            <option value="">-- Choisir un professeur --</option>
+            {profs.map(p => (
+              <option key={p.id} value={p.id}>{p.nom} {p.prenom}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Date *</label>
+          <input
+            type="date"
+            className="form-control"
+            value={form.date_absence}
+            onChange={e => setForm({ ...form, date_absence: e.target.value })}
+          />
+        </div>
+        <div className="form-group">
+          <label>Motif (optionnel)</label>
+          <input
+            className="form-control"
+            placeholder="ex: Maladie, congé..."
+            value={form.motif}
+            onChange={e => setForm({ ...form, motif: e.target.value })}
+          />
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+/* ================================================================
    MAIN — route to correct view based on role
    ================================================================ */
+const TAB_STYLES = `
+  .absence-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .absence-tab {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .absence-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .absence-tab:hover:not(.active) {
+    color: var(--text);
+  }
+`;
+
+let absenceTabStylesInjected = false;
+
 const Absences = () => {
   const { user } = useAuth();
+
+  // Inject tab styles once
+  if (!absenceTabStylesInjected) {
+    absenceTabStylesInjected = true;
+    const el = document.createElement('style');
+    el.textContent = TAB_STYLES;
+    document.head.appendChild(el);
+  }
+
+  const [activeTab, setActiveTab] = useState('etudiants');
+
   if (user?.role === 'professeur') return <ProfAbsenceView />;
-  return <AdminAbsenceView />;
+
+  const isAdminRole = user?.role === 'admin' || user?.role === 'developpeur';
+
+  if (!isAdminRole) return <AdminAbsenceView />;
+
+  return (
+    <div>
+      <div className="absence-tabs">
+        <button
+          className={`absence-tab${activeTab === 'etudiants' ? ' active' : ''}`}
+          onClick={() => setActiveTab('etudiants')}
+        >
+          🎓 Absences Étudiants
+        </button>
+        <button
+          className={`absence-tab${activeTab === 'profs' ? ' active' : ''}`}
+          onClick={() => setActiveTab('profs')}
+        >
+          👨‍🏫 Absences Professeurs
+        </button>
+      </div>
+
+      {activeTab === 'etudiants' ? <AdminAbsenceView /> : <ProfAbsencesTab />}
+    </div>
+  );
 };
 
 export default Absences;

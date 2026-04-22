@@ -1,5 +1,25 @@
 const db = require('../config/db');
 
+// Auto-create absences_profs table on module load
+(async () => {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS absences_profs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        professeur_id INT NOT NULL,
+        date_absence DATE NOT NULL,
+        motif TEXT,
+        created_by INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (professeur_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `);
+  } catch (err) {
+    console.error('absencesController init (absences_profs):', err.message);
+  }
+})();
+
 // Obtenir les absences
 exports.getAbsences = async (req, res) => {
   try {
@@ -136,6 +156,57 @@ exports.deleteAbsence = async (req, res) => {
   try {
     await db.query('DELETE FROM absences WHERE id = ?', [req.params.id]);
     res.json({ message: 'Absence supprimée.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+};
+
+// ==================== ABSENCES PROFESSEURS ====================
+
+// POST /absences/profs — admin/dev marks prof absent
+exports.addAbsenceProf = async (req, res) => {
+  try {
+    const { professeur_id, date_absence, motif } = req.body;
+
+    if (!professeur_id || !date_absence) {
+      return res.status(400).json({ message: 'professeur_id et date_absence sont requis.' });
+    }
+
+    const [result] = await db.query(
+      'INSERT INTO absences_profs (professeur_id, date_absence, motif, created_by) VALUES (?, ?, ?, ?)',
+      [professeur_id, date_absence, motif || null, req.user.id]
+    );
+
+    res.status(201).json({ message: 'Absence professeur enregistrée.', id: result.insertId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+};
+
+// GET /absences/profs — list all prof absences with prof name
+exports.getAbsencesProfs = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT ap.*, u.nom as prof_nom, u.prenom as prof_prenom,
+             c.nom as created_by_nom, c.prenom as created_by_prenom
+      FROM absences_profs ap
+      JOIN users u ON ap.professeur_id = u.id
+      JOIN users c ON ap.created_by = c.id
+      ORDER BY ap.date_absence DESC, u.nom
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+};
+
+// DELETE /absences/profs/:id
+exports.deleteAbsenceProf = async (req, res) => {
+  try {
+    await db.query('DELETE FROM absences_profs WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Absence professeur supprimée.' });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
