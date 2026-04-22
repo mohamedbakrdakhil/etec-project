@@ -13,6 +13,7 @@ const academicCtrl = require('../controllers/academicController');
 const planningCtrl = require('../controllers/planningController');
 const dashboardCtrl = require('../controllers/dashboardController');
 const paiementsCtrl = require('../controllers/paiementsController');
+const evalCtrl = require('../controllers/evaluationsController');
 
 // Strict rate limiter for login (brute force protection)
 const loginLimiter = rateLimit({
@@ -67,6 +68,9 @@ router.get('/notes/bulletin/:etudiantId', auth, notesCtrl.getBulletin);
 router.get('/notes/bulletin', auth, authorize('etudiant'), notesCtrl.getBulletin);
 
 // ==================== ABSENCES ====================
+router.get('/absences/profs', auth, authorize('developpeur', 'admin'), absencesCtrl.getAbsencesProfs);
+router.post('/absences/profs', auth, authorize('developpeur', 'admin'), absencesCtrl.addAbsenceProf);
+router.delete('/absences/profs/:id', auth, authorize('developpeur', 'admin'), absencesCtrl.deleteAbsenceProf);
 router.get('/absences', auth, absencesCtrl.getAbsences);
 router.post('/absences', auth, authorize('developpeur', 'admin', 'professeur'), absencesCtrl.addAbsence);
 router.post('/absences/bulk', auth, authorize('developpeur', 'admin', 'professeur'), absencesCtrl.addBulkAbsences);
@@ -79,7 +83,14 @@ router.get('/absences/summary', auth, authorize('etudiant'), absencesCtrl.getStu
 router.get('/planning', auth, planningCtrl.getPlanning);
 router.post('/planning', auth, authorize('developpeur', 'admin'), planningCtrl.addSeance);
 router.put('/planning/:id', auth, authorize('developpeur', 'admin'), planningCtrl.updateSeance);
+router.patch('/planning/:id/cancel', auth, authorize('developpeur', 'admin'), planningCtrl.cancelSeance);
+router.patch('/planning/:id/restore', auth, authorize('developpeur', 'admin'), planningCtrl.restoreSeance);
 router.delete('/planning/:id', auth, authorize('developpeur', 'admin'), planningCtrl.deleteSeance);
+
+// ==================== EVALUATIONS ====================
+router.post('/evaluations', auth, evalCtrl.addEvaluation);
+router.get('/evaluations/my/:planningId', auth, evalCtrl.getMyEvaluation);
+router.get('/evaluations/:planningId', auth, evalCtrl.getEvaluations);
 
 // ==================== DASHBOARD ====================
 router.get('/dashboard/stats', auth, authorize('developpeur', 'admin'), dashboardCtrl.getDashboardStats);
