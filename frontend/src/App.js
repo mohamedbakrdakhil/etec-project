@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Filieres from './pages/Filieres';
 import Groupes from './pages/Groupes';
-import Modules from './pages/Modules';
 import Notes from './pages/Notes';
 import Absences from './pages/Absences';
 import Planning from './pages/Planning';
@@ -64,7 +63,6 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="filieres" element={<Filieres />} />
             <Route path="groupes" element={<Groupes />} />
-            <Route path="modules" element={<Modules />} />
             <Route path="notes" element={<Notes />} />
             <Route path="absences" element={<Absences />} />
             <Route path="planning" element={<Planning />} />
@@ -84,7 +82,6 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="filieres" element={<Filieres />} />
             <Route path="groupes" element={<Groupes />} />
-            <Route path="modules" element={<Modules />} />
             <Route path="notes" element={<Notes />} />
             <Route path="absences" element={<Absences />} />
             <Route path="planning" element={<Planning />} />
