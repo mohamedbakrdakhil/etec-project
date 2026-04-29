@@ -1,24 +1,33 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Users from './pages/Users';
-import Filieres from './pages/Filieres';
-import Groupes from './pages/Groupes';
-import Notes from './pages/Notes';
-import Absences from './pages/Absences';
-import Planning from './pages/Planning';
-import Enseignements from './pages/Enseignements';
-import Annonces from './pages/Annonces';
-import Logs from './pages/Logs';
-import Paiements from './pages/Paiements';
-import ProfDashboard from './pages/ProfDashboard';
-import EtudiantDashboard from './pages/EtudiantDashboard';
-import EtudiantNotes from './pages/EtudiantNotes';
-import EtudiantAbsences from './pages/EtudiantAbsences';
 import AIAssistant from './components/AIAssistant';
+
+// Lazy-load all pages for fastest initial load + instant navigation
+const Login            = lazy(() => import('./pages/Login'));
+const Dashboard        = lazy(() => import('./pages/Dashboard'));
+const Users            = lazy(() => import('./pages/Users'));
+const Filieres         = lazy(() => import('./pages/Filieres'));
+const Groupes          = lazy(() => import('./pages/Groupes'));
+const Notes            = lazy(() => import('./pages/Notes'));
+const Absences         = lazy(() => import('./pages/Absences'));
+const Planning         = lazy(() => import('./pages/Planning'));
+const Enseignements    = lazy(() => import('./pages/Enseignements'));
+const Annonces         = lazy(() => import('./pages/Annonces'));
+const Logs             = lazy(() => import('./pages/Logs'));
+const Paiements        = lazy(() => import('./pages/Paiements'));
+const ProfDashboard    = lazy(() => import('./pages/ProfDashboard'));
+const EtudiantDashboard= lazy(() => import('./pages/EtudiantDashboard'));
+const EtudiantNotes    = lazy(() => import('./pages/EtudiantNotes'));
+const EtudiantAbsences = lazy(() => import('./pages/EtudiantAbsences'));
+
+const PageLoader = () => (
+  <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh',flexDirection:'column',gap:14}}>
+    <div style={{width:38,height:38,border:'3px solid var(--border)',borderTopColor:'var(--accent)',borderRadius:'50%',animation:'spin 0.7s linear infinite'}}/>
+    <span style={{color:'var(--text-muted)',fontSize:13}}>Chargement...</span>
+  </div>
+);
 
 // Protected Route
 const ProtectedRoute = ({ children, roles }) => {
@@ -48,6 +57,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
@@ -117,6 +127,7 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        </Suspense>
         <AIAssistantWrapper />
       </BrowserRouter>
     </AuthProvider>
