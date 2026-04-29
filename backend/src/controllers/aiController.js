@@ -31,7 +31,8 @@ async function fetchLiveContext(userRole, userId) {
         (SELECT COUNT(*) FROM users WHERE role='etudiant') AS nb_etudiants,
         (SELECT COUNT(*) FROM users WHERE role='professeur') AS nb_profs,
         (SELECT COUNT(*) FROM groupes) AS nb_groupes,
-        (SELECT COUNT(*) FROM filieres) AS nb_filieres,
+        (SELECT COUNT(*) FROM filieres WHERE is_active=1) AS nb_filieres,
+        (SELECT COUNT(*) FROM modules) AS nb_modules,
         (SELECT COUNT(*) FROM absences WHERE DATE(date_absence) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)) AS absences_semaine,
         (SELECT COUNT(*) FROM absences WHERE DATE(date_absence) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) AS absences_mois
     `);
@@ -55,11 +56,9 @@ async function fetchLiveContext(userRole, userId) {
 
     // Top absents (last 30 days)
     const [topAbsents] = await pool.query(`
-      SELECT CONCAT(u.prenom, ' ', u.nom) AS nom, COUNT(*) AS nb,
-             g.nom AS groupe
+      SELECT CONCAT(u.prenom, ' ', u.nom) AS nom, COUNT(*) AS nb
       FROM absences a
       JOIN users u ON a.etudiant_id = u.id
-      LEFT JOIN groupes g ON u.id IN (SELECT etudiant_id FROM groupe_etudiants WHERE groupe_id = g.id)
       WHERE a.date_absence >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
       GROUP BY a.etudiant_id
       ORDER BY nb DESC
@@ -171,7 +170,7 @@ Date: ${now.date} | Jour: ${now.jour} | Heure: ${now.heure}
 ${now.greeting} ${userName.split(' ')[0]} !
 
 === DONNÉES LIVE DU SYSTÈME ===
-👥 Étudiants: ${stats?.nb_etudiants || 0} | 👨‍🏫 Profs: ${stats?.nb_profs || 0} | 📋 Groupes: ${stats?.nb_groupes || 0} | 🎓 Filières: ${stats?.nb_filieres || 0}
+👥 Étudiants: ${stats?.nb_etudiants || 0} | 👨‍🏫 Profs: ${stats?.nb_profs || 0} | 📋 Groupes: ${stats?.nb_groupes || 0} | 🎓 Filières: ${stats?.nb_filieres || 0} | 📚 Modules: ${stats?.nb_modules || 0}
 📅 Absences: ${stats?.absences_semaine || 0} cette semaine | ${stats?.absences_mois || 0} ce mois
 
 === PLANNING AUJOURD'HUI (${now.jour.toUpperCase()}) ===
