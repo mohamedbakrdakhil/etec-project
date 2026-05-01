@@ -179,7 +179,7 @@ function InfoRow({
     <View style={styles.infoRow}>
       <Ionicons name={icon as any} size={16} color="#6B7280" style={styles.infoIcon} />
       <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={[styles.infoValue, valueColor && { color: valueColor }]} numberOfLines={1}>
+      <Text style={[styles.infoValue, valueColor ? { color: valueColor } : undefined]} numberOfLines={1}>
         {value}
       </Text>
     </View>
