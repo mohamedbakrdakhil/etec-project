@@ -1,15 +1,7 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  RefreshControl,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Modal,
+  View, Text, ScrollView, RefreshControl, StyleSheet,
+  TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,308 +9,186 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import EmptyState from '../../components/EmptyState';
 
-const DAYS = [
-  { key: 'lundi', label: 'Lun', full: 'Lundi' },
-  { key: 'mardi', label: 'Mar', full: 'Mardi' },
-  { key: 'mercredi', label: 'Mer', full: 'Mercredi' },
-  { key: 'jeudi', label: 'Jeu', full: 'Jeudi' },
-  { key: 'vendredi', label: 'Ven', full: 'Vendredi' },
-  { key: 'samedi', label: 'Sam', full: 'Samedi' },
-];
+const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const DAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const DAY_COLORS = ['#06D6A0', '#7C3AED', '#0EA5E9', '#F59E0B', '#EF4444', '#EC4899'];
+const DAY_SHORT = ['L', 'M', 'Me', 'J', 'V', 'S'];
 
-const DAY_JS_MAP: Record<number, string> = {
-  0: 'dimanche',
-  1: 'lundi',
-  2: 'mardi',
-  3: 'mercredi',
-  4: 'jeudi',
-  5: 'vendredi',
-  6: 'samedi',
-};
-
-const MODULE_COLORS = [
-  '#06D6A0', '#7C3AED', '#0EA5E9', '#F59E0B',
-  '#EF4444', '#10B981', '#EC4899', '#8B5CF6',
-];
-
-function getModuleColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash += name.charCodeAt(i);
-  return MODULE_COLORS[hash % MODULE_COLORS.length];
+function timeToMinutes(t: string): number {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function fmt(t: string) { return t ? t.slice(0, 5) : ''; }
+function getDuration(a: string, b: string) {
+  const d = timeToMinutes(b) - timeToMinutes(a);
+  if (d <= 0) return '';
+  const h = Math.floor(d / 60), m = d % 60;
+  return h === 0 ? `${m}min` : m === 0 ? `${h}h` : `${h}h${m}`;
 }
 
 export default function PlanningScreen() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [seances, setSeances] = useState<any[]>([]);
   const [error, setError] = useState('');
-  const [ratingModal, setRatingModal] = useState<{ visible: boolean; session: any | null }>({
-    visible: false,
-    session: null,
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const d = new Date().getDay();
+    return ({ 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 } as any)[d] ?? 0;
   });
-  const [selectedRating, setSelectedRating] = useState(0);
-  const [submittingRating, setSubmittingRating] = useState(false);
 
-  const todayKey = DAY_JS_MAP[new Date().getDay()];
-  const [selectedDay, setSelectedDay] = useState(
-    DAYS.find(d => d.key === todayKey)?.key || 'lundi'
-  );
+  const [showModal, setShowModal] = useState(false);
+  const [editSeance, setEditSeance] = useState<any>(null);
+  const [form, setForm] = useState<any>({ jour: 'lundi', heureDebut: '08:00', heureFin: '10:00', salle: '', module_id: '', groupe_id: '', professeur_id: '' });
+  const [modules, setModules] = useState<any[]>([]);
+  const [groupes, setGroupes] = useState<any[]>([]);
+  const [profs, setProfs] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  const fetchSessions = useCallback(async (day: string) => {
-    setLoading(true);
+  const canEdit = user?.role === 'admin' || user?.role === 'developpeur';
+
+  const fetchData = useCallback(async () => {
     setError('');
     try {
-      const res = await api.get(`/planning?jour=${day}`);
-      const data = Array.isArray(res.data)
-        ? res.data
-        : (res.data?.seances || res.data?.data || []);
-      setSessions(data);
-    } catch (_) {
-      setError('Impossible de charger le planning.');
-      setSessions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      const res = await api.get('/planning');
+      const data = Array.isArray(res.data) ? res.data : (res.data?.seances || res.data?.data || []);
+      setSeances(data);
+      if (canEdit) {
+        const [mR, gR, uR] = await Promise.allSettled([api.get('/modules'), api.get('/groupes'), api.get('/users?role=professeur')]);
+        if (mR.status === 'fulfilled') { const d = mR.value.data; setModules(Array.isArray(d) ? d : (d?.data || [])); }
+        if (gR.status === 'fulfilled') { const d = gR.value.data; setGroupes(Array.isArray(d) ? d : (d?.data || [])); }
+        if (uR.status === 'fulfilled') { const d = uR.value.data; setProfs(Array.isArray(d) ? d : (d?.data || d?.users || [])); }
+      }
+    } catch { setError('Impossible de charger le planning.'); }
+    finally { setLoading(false); }
+  }, [canEdit]);
 
-  useEffect(() => { fetchSessions(selectedDay); }, [selectedDay]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+  const onRefresh = useCallback(async () => { setRefreshing(true); await fetchData(); setRefreshing(false); }, [fetchData]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchSessions(selectedDay);
-    setRefreshing(false);
-  }, [selectedDay, fetchSessions]);
+  const daySeances = seances
+    .filter(s => (s.jour || '').toLowerCase() === DAYS[selectedDay])
+    .sort((a, b) => timeToMinutes(a.heureDebut || a.heure_debut) - timeToMinutes(b.heureDebut || b.heure_debut));
 
-  function openRating(session: any) {
-    setSelectedRating(0);
-    setRatingModal({ visible: true, session });
+  function openAdd() {
+    setEditSeance(null);
+    setForm({ jour: DAYS[selectedDay], heureDebut: '08:00', heureFin: '10:00', salle: '', module_id: modules[0]?.id ? String(modules[0].id) : '', groupe_id: groupes[0]?.id ? String(groupes[0].id) : '', professeur_id: profs[0]?.id ? String(profs[0].id) : '' });
+    setShowModal(true);
   }
-
-  async function submitRating() {
-    if (selectedRating === 0) {
-      Alert.alert('Note requise', 'Veuillez sélectionner une note de 1 à 10.');
-      return;
-    }
-    setSubmittingRating(true);
+  function openEdit(s: any) {
+    setEditSeance(s);
+    setForm({ jour: s.jour || 'lundi', heureDebut: fmt(s.heureDebut || s.heure_debut || '08:00'), heureFin: fmt(s.heureFin || s.heure_fin || '10:00'), salle: s.salle || '', module_id: String(s.module?.id || s.module_id || ''), groupe_id: String(s.groupe?.id || s.groupe_id || ''), professeur_id: String(s.professeur?.id || s.professeur_id || '') });
+    setShowModal(true);
+  }
+  async function handleSave() {
+    setSaving(true);
     try {
-      await api.post('/planning/rate', {
-        seance_id: ratingModal.session?.id,
-        note: selectedRating,
-      });
-      Alert.alert('Merci !', 'Votre évaluation a été enregistrée.');
-      setRatingModal({ visible: false, session: null });
-    } catch (_) {
-      Alert.alert('Erreur', 'Impossible d\'enregistrer l\'évaluation.');
-    } finally {
-      setSubmittingRating(false);
-    }
+      const payload = { jour: form.jour, heure_debut: form.heureDebut, heure_fin: form.heureFin, salle: form.salle, module_id: Number(form.module_id), groupe_id: Number(form.groupe_id), professeur_id: Number(form.professeur_id) };
+      if (editSeance) await api.put(`/planning/${editSeance.id}`, payload);
+      else await api.post('/planning', payload);
+      setShowModal(false);
+      await fetchData();
+    } catch (e: any) { Alert.alert('Erreur', e?.response?.data?.message || 'Impossible de sauvegarder.'); }
+    finally { setSaving(false); }
+  }
+  async function handleDelete(s: any) {
+    Alert.alert('Supprimer', `${s.module?.nom || 'Séance'} - ${fmt(s.heureDebut || s.heure_debut)}`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: async () => { try { await api.delete(`/planning/${s.id}`); await fetchData(); } catch { Alert.alert('Erreur', 'Impossible de supprimer.'); } } },
+    ]);
   }
 
-  const isEtudiant = user?.role === 'etudiant';
-  const now = new Date();
-  const currentHour = now.getHours() * 60 + now.getMinutes();
-
-  function isPastSession(session: any): boolean {
-    const timeStr = session.heureFin || session.heure_fin || '';
-    if (!timeStr) return false;
-    const parts = timeStr.split(':');
-    if (parts.length < 2) return false;
-    const sessionEnd = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    return selectedDay === todayKey && sessionEnd < currentHour;
-  }
+  if (loading) return <SafeAreaView style={styles.safe}><View style={styles.center}><ActivityIndicator size="large" color="#06D6A0" /></View></SafeAreaView>;
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Planning</Text>
-        {loading && <ActivityIndicator size="small" color="#06D6A0" />}
+        {canEdit && <TouchableOpacity style={styles.addBtn} onPress={openAdd}><Ionicons name="add" size={22} color="#0A0F1E" /></TouchableOpacity>}
       </View>
 
-      {/* Day selector */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.dayScroll}
-        style={styles.dayScrollContainer}
-      >
-        {DAYS.map((day) => {
-          const isSelected = selectedDay === day.key;
-          const isToday = day.key === todayKey;
+      {/* Day tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayBar}>
+        {DAYS.map((day, i) => {
+          const isToday = ({ 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 } as any)[new Date().getDay()] === i;
+          const count = seances.filter(s => (s.jour || '').toLowerCase() === day).length;
+          const active = selectedDay === i;
           return (
-            <TouchableOpacity
-              key={day.key}
-              style={[
-                styles.dayChip,
-                isSelected && styles.dayChipSelected,
-                isToday && !isSelected && styles.dayChipToday,
-              ]}
-              onPress={() => setSelectedDay(day.key)}
-              activeOpacity={0.8}
-            >
-              <Text style={[
-                styles.dayChipLabel,
-                isSelected && styles.dayChipLabelSelected,
-                isToday && !isSelected && styles.dayChipLabelToday,
-              ]}>
-                {day.label}
-              </Text>
-              {isToday && (
-                <View style={[styles.todayDot, isSelected && styles.todayDotSelected]} />
-              )}
+            <TouchableOpacity key={day} style={[styles.dayChip, active && { backgroundColor: DAY_COLORS[i] + '20', borderColor: DAY_COLORS[i] }]} onPress={() => setSelectedDay(i)}>
+              <Text style={[styles.dayShort, active && { color: DAY_COLORS[i] }]}>{DAY_SHORT[i]}</Text>
+              <Text style={[styles.dayLabel, active && { color: DAY_COLORS[i] }]}>{DAYS_FR[i]}</Text>
+              {count > 0 && <View style={[styles.dayCount, { backgroundColor: active ? DAY_COLORS[i] : '#374151' }]}><Text style={[styles.dayCountText, active && { color: '#0A0F1E' }]}>{count}</Text></View>}
+              {isToday && <View style={[styles.todayDot, { backgroundColor: active ? DAY_COLORS[i] : '#6B7280' }]} />}
             </TouchableOpacity>
           );
         })}
       </ScrollView>
 
-      {error !== '' && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      {/* Sessions list */}
-      <FlatList
-        data={sessions}
-        keyExtractor={(item, i) => String(item.id || i)}
-        contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#06D6A0" />}
-        ListEmptyComponent={
-          loading ? null : (
-            <EmptyState
-              emoji="📅"
-              title="Aucune séance"
-              subtitle={`Pas de cours ce ${DAYS.find(d => d.key === selectedDay)?.full || selectedDay}`}
-            />
-          )
-        }
-        renderItem={({ item }) => {
-          const isCancelled = item.annule || item.cancelled || item.statut === 'annule';
-          const isPast = isPastSession(item);
-          const moduleName = item.module?.nom || item.moduleName || 'Module';
-          const color = getModuleColor(moduleName);
-          const profName = item.professeur
-            ? `${item.professeur.prenom} ${item.professeur.nom}`
-            : item.profName || '';
-          const groupeName = item.groupe?.nom || item.groupeName || '';
-
-          return (
-            <View style={[
-              styles.sessionCard,
-              isCancelled && styles.sessionCancelled,
-            ]}>
-              <View style={[styles.sessionBorder, { backgroundColor: isCancelled ? '#374151' : color }]} />
-              <View style={styles.sessionBody}>
-                <View style={styles.sessionTopRow}>
-                  <Text style={[styles.sessionModule, isCancelled && styles.textMuted]} numberOfLines={1}>
-                    {moduleName}
-                  </Text>
-                  {isCancelled && (
-                    <View style={styles.cancelBadge}>
-                      <Text style={styles.cancelBadgeText}>ANNULÉ</Text>
-                    </View>
-                  )}
-                  {isPast && !isCancelled && isEtudiant && (
-                    <TouchableOpacity
-                      style={styles.rateButton}
-                      onPress={() => openRating(item)}
-                    >
-                      <Ionicons name="star" size={14} color="#F59E0B" />
-                      <Text style={styles.rateButtonText}>Évaluer</Text>
-                    </TouchableOpacity>
-                  )}
+      <ScrollView contentContainerStyle={styles.list} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#06D6A0" />} showsVerticalScrollIndicator={false}>
+        {error !== '' && <View style={styles.errorBanner}><Ionicons name="wifi-outline" size={14} color="#F59E0B" /><Text style={styles.errorText}>{error}</Text></View>}
+        {daySeances.length === 0
+          ? <EmptyState emoji="📅" title="Pas de séances" subtitle={`Aucune séance le ${DAYS_FR[selectedDay]}`} />
+          : daySeances.map((s, idx) => {
+            const color = DAY_COLORS[selectedDay];
+            const debut = fmt(s.heureDebut || s.heure_debut);
+            const fin = fmt(s.heureFin || s.heure_fin);
+            const profName = s.professeur ? `${s.professeur.prenom} ${s.professeur.nom}` : '';
+            return (
+              <View key={s.id || idx} style={[styles.card, { borderLeftColor: color }]}>
+                <View style={styles.timeCol}>
+                  <Text style={[styles.timeStart, { color }]}>{debut}</Text>
+                  <View style={[styles.timeLine, { backgroundColor: color + '40' }]} />
+                  <Text style={styles.timeEnd}>{fin}</Text>
+                  <Text style={[styles.duration, { color }]}>{getDuration(s.heureDebut || s.heure_debut, s.heureFin || s.heure_fin)}</Text>
                 </View>
-
-                <View style={styles.sessionMeta}>
-                  <Ionicons name="time-outline" size={13} color="#6B7280" />
-                  <Text style={styles.sessionMetaText}>
-                    {item.heureDebut || item.heure_debut || ''} – {item.heureFin || item.heure_fin || ''}
-                  </Text>
+                <View style={styles.cardBody}>
+                  <Text style={styles.moduleName} numberOfLines={2}>{s.module?.nom || s.moduleName || 'Module'}</Text>
+                  <View style={styles.chips}>
+                    {(s.groupe?.nom || s.groupeName) && <Chip icon="people-outline" label={s.groupe?.nom || s.groupeName} />}
+                    {s.salle && <Chip icon="location-outline" label={s.salle} />}
+                    {profName && <Chip icon="person-outline" label={profName} />}
+                  </View>
                 </View>
-
-                {profName !== '' && (
-                  <View style={styles.sessionMeta}>
-                    <Ionicons name="person-outline" size={13} color="#6B7280" />
-                    <Text style={styles.sessionMetaText}>{profName}</Text>
+                {canEdit && (
+                  <View style={styles.actionsCol}>
+                    <TouchableOpacity onPress={() => openEdit(s)} style={styles.actionBtn}><Ionicons name="pencil" size={14} color="#0EA5E9" /></TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(s)} style={styles.actionBtn}><Ionicons name="trash" size={14} color="#EF4444" /></TouchableOpacity>
                   </View>
                 )}
-
-                <View style={styles.sessionBottomRow}>
-                  {groupeName !== '' && (
-                    <View style={styles.sessionTag}>
-                      <Text style={styles.sessionTagText}>{groupeName}</Text>
-                    </View>
-                  )}
-                  {item.salle && (
-                    <View style={styles.sessionTag}>
-                      <Ionicons name="location-outline" size={11} color="#9CA3AF" />
-                      <Text style={styles.sessionTagText}>{item.salle}</Text>
-                    </View>
-                  )}
-                </View>
               </View>
-            </View>
-          );
-        }}
-      />
+            );
+          })}
+      </ScrollView>
 
-      {/* Rating Modal */}
-      <Modal
-        visible={ratingModal.visible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setRatingModal({ visible: false, session: null })}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Évaluer la séance</Text>
-              <TouchableOpacity onPress={() => setRatingModal({ visible: false, session: null })}>
-                <Ionicons name="close" size={24} color="#9CA3AF" />
+      {/* Modal */}
+      <Modal visible={showModal} animationType="slide" transparent>
+        <View style={styles.overlay}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>{editSeance ? 'Modifier la séance' : 'Nouvelle séance'}</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)}><Ionicons name="close" size={24} color="#9CA3AF" /></TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Label>Jour</Label>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {DAYS.map((d, i) => <TouchableOpacity key={d} style={[styles.pill, form.jour === d && styles.pillActive]} onPress={() => setForm((f: any) => ({ ...f, jour: d }))}><Text style={[styles.pillText, form.jour === d && { color: '#06D6A0' }]}>{DAYS_FR[i]}</Text></TouchableOpacity>)}
+                </View>
+              </ScrollView>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}><Label>Début</Label><TextInput style={styles.input} value={form.heureDebut} onChangeText={v => setForm((f: any) => ({ ...f, heureDebut: v }))} placeholder="08:00" placeholderTextColor="#6B7280" /></View>
+                <View style={{ flex: 1 }}><Label>Fin</Label><TextInput style={styles.input} value={form.heureFin} onChangeText={v => setForm((f: any) => ({ ...f, heureFin: v }))} placeholder="10:00" placeholderTextColor="#6B7280" /></View>
+              </View>
+              <Label>Salle</Label>
+              <TextInput style={styles.input} value={form.salle} onChangeText={v => setForm((f: any) => ({ ...f, salle: v }))} placeholder="Ex: A1" placeholderTextColor="#6B7280" />
+              <SelectRow label="Module" items={modules} value={form.module_id} onSelect={(id: string) => setForm((f: any) => ({ ...f, module_id: id }))} getLabel={(m: any) => m.nom || m.name} />
+              <SelectRow label="Groupe" items={groupes} value={form.groupe_id} onSelect={(id: string) => setForm((f: any) => ({ ...f, groupe_id: id }))} getLabel={(g: any) => g.nom || g.name} />
+              <SelectRow label="Professeur" items={profs} value={form.professeur_id} onSelect={(id: string) => setForm((f: any) => ({ ...f, professeur_id: id }))} getLabel={(p: any) => `${p.prenom} ${p.nom}`} />
+              <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.7 }]} onPress={handleSave} disabled={saving}>
+                {saving ? <ActivityIndicator color="#0A0F1E" /> : <Text style={styles.saveBtnText}>{editSeance ? 'Enregistrer' : 'Ajouter'}</Text>}
               </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalModule}>
-              {ratingModal.session?.module?.nom || 'Module'}
-            </Text>
-            <Text style={styles.modalSubtitle}>
-              Donnez une note de 1 à 10 pour cette séance
-            </Text>
-
-            <View style={styles.ratingGrid}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <TouchableOpacity
-                  key={n}
-                  style={[
-                    styles.ratingButton,
-                    selectedRating === n && styles.ratingButtonSelected,
-                    n <= 4 && styles.ratingBad,
-                    n >= 5 && n <= 7 && styles.ratingMid,
-                    n >= 8 && styles.ratingGood,
-                    selectedRating === n && { borderWidth: 2, borderColor: '#06D6A0' },
-                  ]}
-                  onPress={() => setSelectedRating(n)}
-                >
-                  <Text style={[
-                    styles.ratingButtonText,
-                    selectedRating === n && { color: '#06D6A0', fontWeight: '800' },
-                  ]}>{n}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.submitButton, submittingRating && { opacity: 0.7 }]}
-              onPress={submitRating}
-              disabled={submittingRating}
-            >
-              {submittingRating ? (
-                <ActivityIndicator color="#0A0F1E" size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>Envoyer l'évaluation</Text>
-              )}
-            </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -326,153 +196,69 @@ export default function PlanningScreen() {
   );
 }
 
+function Chip({ icon, label }: any) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#1F2937', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
+      <Ionicons name={icon} size={11} color="#9CA3AF" />
+      <Text style={{ fontSize: 11, color: '#9CA3AF' }} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
+function Label({ children }: any) {
+  return <Text style={{ fontSize: 12, fontWeight: '600', color: '#9CA3AF', marginBottom: 8, letterSpacing: 0.5 }}>{children}</Text>;
+}
+function SelectRow({ label, items, value, onSelect, getLabel }: any) {
+  return (
+    <>
+      <Label>{label}</Label>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {items.map((item: any) => (
+            <TouchableOpacity key={item.id} style={[{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: '#374151', backgroundColor: '#0A0F1E', maxWidth: 140 }, value === String(item.id) && { borderColor: '#06D6A0', backgroundColor: '#06D6A010' }]} onPress={() => onSelect(String(item.id))}>
+              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#9CA3AF' }, value === String(item.id) && { color: '#06D6A0' }]} numberOfLines={1}>{getLabel(item)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A0F1E' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   title: { fontSize: 24, fontWeight: '800', color: '#F9FAFB' },
-  dayScrollContainer: { maxHeight: 70 },
-  dayScroll: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  dayChip: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#111827',
-    borderWidth: 1,
-    borderColor: '#374151',
-    minWidth: 52,
-  },
-  dayChipSelected: {
-    backgroundColor: '#06D6A0',
-    borderColor: '#06D6A0',
-  },
-  dayChipToday: {
-    borderColor: '#06D6A060',
-  },
-  dayChipLabel: { fontSize: 13, fontWeight: '700', color: '#9CA3AF' },
-  dayChipLabelSelected: { color: '#0A0F1E' },
-  dayChipLabelToday: { color: '#06D6A0' },
-  todayDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#06D6A0', marginTop: 3 },
-  todayDotSelected: { backgroundColor: '#0A0F1E' },
-  errorBanner: {
-    marginHorizontal: 20,
-    padding: 12,
-    backgroundColor: '#1F0E0E',
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  errorText: { color: '#EF4444', fontSize: 13 },
+  addBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#06D6A0', justifyContent: 'center', alignItems: 'center' },
+  dayBar: { paddingHorizontal: 16, gap: 8, paddingBottom: 8 },
+  dayChip: { alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: '#374151', backgroundColor: '#111827', minWidth: 52, position: 'relative' },
+  dayShort: { fontSize: 15, fontWeight: '800', color: '#6B7280' },
+  dayLabel: { fontSize: 9, color: '#6B7280', marginTop: 1 },
+  dayCount: { position: 'absolute', top: 3, right: 3, width: 15, height: 15, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  dayCountText: { fontSize: 9, fontWeight: '700', color: '#F9FAFB' },
+  todayDot: { width: 4, height: 4, borderRadius: 2, marginTop: 2 },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
-  sessionCard: {
-    flexDirection: 'row',
-    backgroundColor: '#111827',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#374151',
-    overflow: 'hidden',
-  },
-  sessionCancelled: { opacity: 0.5 },
-  sessionBorder: { width: 4 },
-  sessionBody: { flex: 1, padding: 14 },
-  sessionTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    gap: 8,
-  },
-  sessionModule: { fontSize: 15, fontWeight: '700', color: '#F9FAFB', flex: 1 },
-  textMuted: { color: '#6B7280' },
-  cancelBadge: {
-    backgroundColor: '#EF444420',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  cancelBadgeText: { fontSize: 10, fontWeight: '800', color: '#EF4444', letterSpacing: 1 },
-  rateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F59E0B20',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  rateButtonText: { fontSize: 12, fontWeight: '600', color: '#F59E0B' },
-  sessionMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
-  sessionMetaText: { fontSize: 12, color: '#9CA3AF' },
-  sessionBottomRow: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  sessionTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#1F2937',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  sessionTagText: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: '#00000088',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#111827',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#F9FAFB' },
-  modalModule: { fontSize: 15, fontWeight: '600', color: '#06D6A0', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#9CA3AF', marginBottom: 20 },
-  ratingGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  ratingButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1F2937',
-    borderWidth: 1,
-    borderColor: '#374151',
-  },
-  ratingButtonSelected: { backgroundColor: '#06D6A010' },
-  ratingBad: { borderColor: '#EF444440' },
-  ratingMid: { borderColor: '#F59E0B40' },
-  ratingGood: { borderColor: '#06D6A040' },
-  ratingButtonText: { fontSize: 16, fontWeight: '700', color: '#F9FAFB' },
-  submitButton: {
-    backgroundColor: '#06D6A0',
-    borderRadius: 14,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#0A0F1E' },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1C1A0E', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#F59E0B30', marginBottom: 4 },
+  errorText: { color: '#F59E0B', fontSize: 13, flex: 1 },
+  card: { flexDirection: 'row', backgroundColor: '#111827', borderRadius: 16, borderWidth: 1, borderColor: '#374151', borderLeftWidth: 4, minHeight: 90 },
+  timeCol: { width: 65, padding: 12, alignItems: 'center', justifyContent: 'space-between', borderRightWidth: 1, borderRightColor: '#1F2937' },
+  timeStart: { fontSize: 13, fontWeight: '800' },
+  timeLine: { flex: 1, width: 2, marginVertical: 4, borderRadius: 1 },
+  timeEnd: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
+  duration: { fontSize: 10, fontWeight: '700', marginTop: 2 },
+  cardBody: { flex: 1, padding: 12 },
+  moduleName: { fontSize: 15, fontWeight: '700', color: '#F9FAFB', marginBottom: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  actionsCol: { justifyContent: 'center', gap: 8, paddingRight: 10 },
+  actionBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#1F2937', justifyContent: 'center', alignItems: 'center' },
+  overlay: { flex: 1, backgroundColor: '#00000090', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#111827', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '92%' },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: '#F9FAFB' },
+  input: { backgroundColor: '#0A0F1E', borderWidth: 1, borderColor: '#374151', borderRadius: 12, paddingHorizontal: 14, height: 48, color: '#F9FAFB', fontSize: 15, marginBottom: 16 },
+  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#374151', backgroundColor: '#0A0F1E' },
+  pillActive: { borderColor: '#06D6A0', backgroundColor: '#06D6A010' },
+  pillText: { fontSize: 13, fontWeight: '600', color: '#9CA3AF' },
+  saveBtn: { backgroundColor: '#06D6A0', borderRadius: 14, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 8 },
+  saveBtnText: { fontSize: 16, fontWeight: '700', color: '#0A0F1E' },
 });

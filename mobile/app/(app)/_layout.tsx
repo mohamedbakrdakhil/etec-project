@@ -49,8 +49,7 @@ export default function AppLayout() {
     }
   }, [user, loading]);
 
-  if (loading) return <LoadingScreen />;
-  if (!user) return null;
+  if (loading || !user) return <LoadingScreen />;
 
   const tabs = getTabsForRole(user.role);
   const allScreens = ['index', 'notes', 'absences', 'planning', 'profile', 'users'];
