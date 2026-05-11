@@ -166,7 +166,7 @@ const ETECHero = ({ user, subtitle, rightContent }) => {
                 background: '#10B981',
                 display: 'inline-block',
                 boxShadow: '0 0 8px #10B981',
-                animation: 'aiPulse 2s ease-in-out infinite',
+                animation: 'livePulse 2s ease-in-out infinite',
               }} />
               <span style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>Système actif</span>
             </div>
@@ -182,7 +182,7 @@ const ETECHero = ({ user, subtitle, rightContent }) => {
               <span style={{
                 display: 'inline-block', width: 2, height: 20,
                 background: '#06D6A0', marginLeft: 3, verticalAlign: 'middle',
-                animation: 'aiCursor 0.8s ease-in-out infinite',
+                animation: 'cursorBlink 0.8s ease-in-out infinite',
               }} />
             </h2>
             {subtitle && (

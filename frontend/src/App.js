@@ -2,7 +2,6 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
-import AIAssistant from './components/AIAssistant';
 
 // Lazy-load all pages for fastest initial load + instant navigation
 const Login            = lazy(() => import('./pages/Login'));
@@ -46,12 +45,6 @@ const RoleRedirect = () => {
   return <Navigate to={routes[user.role] || '/login'} />;
 };
 
-// Show AI only when logged in
-const AIAssistantWrapper = () => {
-  const { user } = useAuth();
-  if (!user) return null;
-  return <AIAssistant />;
-};
 
 function App() {
   return (
@@ -128,7 +121,6 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         </Suspense>
-        <AIAssistantWrapper />
       </BrowserRouter>
     </AuthProvider>
   );

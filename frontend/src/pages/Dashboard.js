@@ -441,7 +441,7 @@ const Dashboard = () => {
               <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>Dernières actions du système</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'aiPulse 2s ease-in-out infinite' }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
               <span style={{ fontSize: 11.5, color: '#10B981', fontWeight: 600 }}>Live</span>
             </div>
           </div>

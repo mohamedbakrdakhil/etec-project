@@ -8,7 +8,6 @@ const authCtrl = require('../controllers/authController');
 const usersCtrl = require('../controllers/usersController');
 const notesCtrl = require('../controllers/notesController');
 const absencesCtrl = require('../controllers/absencesController');
-const aiCtrl = require('../controllers/aiController');
 const academicCtrl = require('../controllers/academicController');
 const planningCtrl = require('../controllers/planningController');
 const dashboardCtrl = require('../controllers/dashboardController');
@@ -113,8 +112,5 @@ router.delete('/paiements/:id', auth, authorize('developpeur', 'admin'), paiemen
 router.get('/annonces', auth, dashboardCtrl.getAnnonces);
 router.post('/annonces', auth, authorize('developpeur', 'admin'), dashboardCtrl.createAnnonce);
 router.delete('/annonces/:id', auth, authorize('developpeur', 'admin'), dashboardCtrl.deleteAnnonce);
-
-// ==================== AI ASSISTANT ====================
-router.post('/ai/chat', auth, aiCtrl.chat);
 
 module.exports = router;

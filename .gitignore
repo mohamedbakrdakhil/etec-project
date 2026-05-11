@@ -3,4 +3,6 @@ node_modules/
 build/
 *.log
 .DS_Store
-.claude/settings.local.json
+.claude/
+.claire/
+.ipynb_checkpoints/
