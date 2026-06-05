@@ -88,11 +88,17 @@ app.use('/api', (req, res, next) => {
 // API Routes
 app.use('/api', apiRoutes);
 
-// Serve Frontend (production)
-app.use(express.static(path.join(__dirname, '../../frontend/build')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../frontend/build/index.html'));
-});
+// Serve Frontend only if build folder exists (not on Railway when frontend is on Vercel)
+const frontendBuild = path.join(__dirname, '../../frontend/build');
+const fs = require('fs');
+if (fs.existsSync(frontendBuild)) {
+  app.use(express.static(frontendBuild));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendBuild, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => res.json({ status: 'ETEC API running', version: '1.0.0' }));
+}
 
 // Start server
 const PORT = process.env.PORT || 5000;
